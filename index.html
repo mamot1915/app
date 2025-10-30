@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بازی حدس لیوان سه بعدی</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+        
+        :root {
+            --theme-accent: #f9a825;
+            --theme-accent-dark: #f57f17;
+            --background-dark: #1a1a1a;
+            --text-light: #ffffff;
+            --dark-gray: #333;
+            --medium-gray: #444;
+            --correct-green: #4CAF50;
+            --correct-green-dark: #388E3C;
+            --wrong-red: #f44336;
+            --wrong-red-dark: #b71c1c;
+            --info-blue: #03A9F4;
+            --info-blue-dark: #0288D1;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--background-dark);
+            color: var(--text-light);
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+
+        #shell-game-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        #message {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            min-height: 25px;
+            transition: color 0.3s;
+            display: none; /* Hide all text feedback */
+        }
+        
+        .button-container {
+             margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-family: 'Vazirmatn', sans-serif;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(145deg, var(--theme-accent), var(--theme-accent-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        
+        .button-container button {
+            width: 100%;
+            max-width: 250px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:disabled {
+            background: var(--medium-gray);
+            cursor: default;
+            transform: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Hamburger Menu */
+        .menu-toggle-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 101;
+            cursor: pointer;
+            width: 35px;
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        .menu-toggle-button span {
+            display: block;
+            width: 100%;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+            transition: all 0.3s ease-in-out;
+        }
+         .menu-toggle-button.open span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+        .menu-toggle-button.open span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-toggle-button.open span:nth-child(3) {
+            transform: rotate(-45deg) translate(8px, -8px);
+        }
+        .menu-toggle-button.hidden {
+            display: none;
+        }
+
+
+        /* Main Menu Panel */
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            padding: 80px 20px 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto; /* Added for scrollability */
+        }
+
+        .menu-panel.open {
+            transform: translateX(0);
+        }
+        
+        .menu-panel h2, .menu-panel h3 {
+            margin-top: 0;
+            text-align: center;
+            color: var(--theme-accent);
+        }
+        
+        .menu-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .menu-nav .nav-button {
+            width: 100%;
+            background: var(--medium-gray);
+            cursor: pointer !important;
+        }
+        
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .setting-item label {
+            text-align: right;
+        }
+
+        .setting-input, .setting-textarea {
+            width: 100%;
+            padding: 8px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: var(--dark-gray);
+            color: white;
+            text-align: center;
+            font-family: 'Vazirmatn', sans-serif;
+            box-sizing: border-box;
+        }
+        
+        .setting-textarea {
+            text-align: right;
+            resize: vertical;
+        }
+        
+        #difficulty-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        #difficulty-selector button {
+            width: 100%;
+            background: var(--medium-gray);
+        }
+        
+        #difficulty-selector button.selected {
+             background: linear-gradient(145deg, var(--theme-accent), var(--theme-accent-dark));
+        }
+        
+        .color-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+            gap: 10px;
+            padding: 0 10px;
+            justify-items: center;
+        }
+
+        .color-swatch {
+            width: 35px !important;
+            height: 35px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            padding: 0 !important;
+            min-width: 0;
+            max-width: 35px !important;
+            background-image: none; /* remove gradient from generic button style */
+        }
+        
+        .color-swatch.selected {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+
+
+        canvas {
+            display: block;
+        }
+
+        /* NEW GAME STYLES */
+        .game-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--background-dark);
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            background-repeat: repeat;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .game-content {
+            position: relative;
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        #yn-pause-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 5;
+            display: none;
+            border-radius: 10px;
+        }
+
+        #yn-menu-toggle, #wheel-menu-toggle {
+            z-index: 202;
+        }
+        #yn-main-menu, #wheel-main-menu {
+            z-index: 201;
+        }
+
+        .game-content h1 { color: var(--theme-accent); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .game-content p { text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+        
+        #yes-no-game-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        #yes-no-game-content > p {
+            margin: 0;
+        }
+        #yn-start-btn, #yn-next-question-btn, #yn-next-round-btn {
+            width: 100%;
+            max-width: 450px;
+            margin: 0;
+        }
+        
+        #yn-timer-container {
+             margin-bottom: 0;
+             width: 100%;
+             max-width: 450px;
+        }
+
+        #yn-timer {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--theme-accent);
+            margin: 10px auto;
+            width: 80px;
+            height: 80px;
+            border: 5px solid var(--theme-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .pause-toggle-button {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            z-index: 202;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            border: 2px solid var(--text-light);
+            border-radius: 8px;
+            padding: 5px;
+            box-sizing: border-box;
+            transition: background-color 0.3s;
+        }
+
+        .pause-toggle-button:hover {
+            background-color: var(--medium-gray);
+        }
+
+        .pause-toggle-button .pause-icon {
+            display: block;
+            width: 6px;
+            height: 20px;
+            background-color: white;
+            border-radius: 1px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .pause-toggle-button.paused .bar1 {
+            width: 0;
+            height: 0;
+            border-top: 11px solid transparent;
+            border-bottom: 11px solid transparent;
+            border-left: 20px solid white;
+            background-color: transparent;
+            transform: translateX(5px);
+            border-radius: 0;
+        }
+        .pause-toggle-button.paused .bar2 {
+            display: none;
+        }
+
+
+        #yn-image-container {
+            width: 100%;
+            max-width: 450px;
+        }
+        #yn-question-image {
+            width: 240px;
+            height: 240px;
+            max-width: 100%; /* Ensures responsiveness on small screens */
+            object-fit: cover;
+            border: 3px solid var(--theme-accent);
+            border-radius: 10px;
+            background-color: var(--dark-gray);
+            display: block;
+            margin: 0 auto;
+        }
+        
+        #yn-question {
+            font-size: 1.5rem;
+            min-height: 40px;
+            margin: 0;
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        #yn-feedback {
+            font-size: 1.5rem;
+            min-height: 30px;
+        }
+
+
+        #yn-feedback.correct { color: var(--correct-green); }
+        #yn-feedback.wrong { color: var(--wrong-red); }
+        #yn-feedback.timeout { color: var(--theme-accent); }
+        
+        #yn-answers {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            margin: 0;
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        #yn-answers button {
+            flex: 1;
+        }
+
+        #yn-answers button:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+        
+        #yn-answers button.correct-answer-highlight {
+            background: linear-gradient(145deg, var(--correct-green), var(--correct-green-dark));
+            border: 2px solid white;
+            transform: scale(1.05);
+        }
+
+        #yn-answers button.user-correct {
+            background: linear-gradient(145deg, var(--correct-green), var(--correct-green-dark));
+        }
+        #yn-answers button.user-wrong {
+            background: linear-gradient(145deg, var(--wrong-red), var(--wrong-red-dark));
+        }
+        
+        #yn-next-question-btn {
+            margin-top: 10px; /* Add extra vertical space */
+        }
+
+        #yn-round-summary {
+            margin-top: 20px;
+        }
+        #yn-round-score-text {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Create Question Form */
+        #create-question-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-group { text-align: right; }
+        .form-group label { display: block; margin-bottom: 5px; }
+
+        #question-text {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--dark-gray);
+            color: var(--text-light);
+            border: 1px solid var(--medium-gray);
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        #create-question-form input[type="file"] {
+            background-color: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+            padding: 8px;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+        }
+
+        #question-list-container {
+            margin-top: 20px;
+            text-align: right;
+            max-height: 35vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        #question-list li {
+            background-color: var(--dark-gray);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .question-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+            text-align: right;
+            overflow: hidden;
+        }
+        .question-info img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .question-info span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .question-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+        #question-list .answer {
+            color: var(--theme-accent);
+            font-weight: bold;
+            min-width: 30px;
+        }
+        .delete-question-btn {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--wrong-red);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .delete-question-btn:hover {
+            background-color: var(--wrong-red-dark);
+        }
+
+        /* --- PANTOMIME STYLES --- */
+        #pantomime-game-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .pantomime-wrapper {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .pantomime-sidebar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+        
+        #pantomime-menu-toggle {
+            position: relative;
+            top: 0;
+            right: 0;
+            margin: 10px 0;
+            z-index: 202;
+        }
+        
+        #pantomime-pause-toggle {
+            position: relative;
+            top: auto;
+            right: auto;
+        }
+
+        #pantomime-main-area {
+            position: relative;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            min-width: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #pantomime-timer-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            color: #000;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 15px;
+            border-radius: 8px;
+            cursor: default;
+            overflow: hidden;
+            min-width: 100px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        #pantomime-timer {
+            font-size: 2rem;
+        }
+        
+        .whiteboard-frame {
+            position: relative;
+            display: flex;
+            /* Simulating a flagship phone */
+            width: 100%;
+            height: 100%;
+            max-width: 550px;
+            max-height: 85vh;
+            aspect-ratio: 12 / 19.5;
+            
+            box-sizing: border-box;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 2px solid #444;
+            border-radius: 25px; /* Rounded corners like a phone */
+            padding: 10px; /* Bezel */
+            background: #111;
+            transform: translateX(80px);
+        }
+        
+        #drawing-canvas {
+            background-color: #fff;
+            border-radius: 15px; /* Rounded canvas inside the "phone" */
+            cursor: crosshair;
+            touch-action: none;
+            width: 100%;
+            height: 100%;
+            border: 1px solid #000; /* A smaller border, the frame provides the main one */
+            box-sizing: border-box;
+        }
+
+        #drawing-tools {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background-color: var(--dark-gray);
+            padding: 20px 10px;
+            border-radius: 10px;
+            width: 150px;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            height: auto;
+        }
+        #color-palette {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+        .tool-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        .tool-separator {
+            width: 80%;
+            height: 1px;
+            background-color: var(--medium-gray);
+            border: none;
+            margin: 0;
+        }
+
+        #undo-btn, #redo-btn {
+            font-size: 1.5rem;
+            padding: 4px 0;
+            line-height: 1;
+        }
+        .tool-button:disabled {
+            opacity: 0.5;
+            background: var(--medium-gray) !important;
+            cursor: default;
+            transform: none;
+            box-shadow: none;
+        }
+
+
+        #drawing-tools .color-swatch {
+            width: 35px;
+            height: 35px;
+            border: 3px solid transparent;
+        }
+         #drawing-tools .color-swatch.selected {
+            border-color: var(--theme-accent);
+            transform: scale(1.1);
+        }
+        .tool-button {
+            padding: 8px 15px;
+            font-size: 1rem;
+            background: var(--medium-gray);
+            box-sizing: border-box;
+        }
+        
+        #drawing-tools > .tool-button {
+            width: 100%;
+        }
+        
+        .tool-row .tool-button {
+            flex-grow: 1;
+        }
+
+        .tool-button.selected {
+            background: linear-gradient(145deg, var(--info-blue), var(--info-blue-dark));
+        }
+
+        #pantomime-end-btn {
+            background: var(--wrong-red);
+        }
+        #pantomime-end-btn:hover {
+            background: linear-gradient(145deg, var(--wrong-red), var(--wrong-red-dark));
+        }
+        
+        /* --- WHEEL OF PRIZES STYLES --- */
+        #wheel-game-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        #wheel-container {
+            position: relative;
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid var(--theme-accent);
+            z-index: 10;
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
+        }
+        #wheel-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        #wheel-spin-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+        }
+        #wheel-result {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+            color: white;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        #wheel-result.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        #wheel-result-text {
+            font-size: 2rem;
+            padding: 20px;
+            background-color: var(--dark-gray);
+            border: 3px solid var(--theme-accent);
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        /* New Wheel Settings Styles */
+        #wheel-prizes-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 30vh;
+            overflow-y: auto;
+            padding: 5px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 5px;
+            background-color: var(--dark-gray);
+        }
+        .prize-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .prize-input-wrapper .prize-name-input {
+            flex-grow: 1;
+            text-align: right;
+        }
+        .prize-input-wrapper .prize-weight-input {
+            flex-shrink: 0;
+            width: 60px;
+        }
+        .remove-prize-btn {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 1.5rem;
+            border-radius: 50%;
+            background: var(--wrong-red);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: background-color 0.2s;
+        }
+        .remove-prize-btn:hover {
+            background: var(--wrong-red-dark);
+        }
+    </style>
+<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "vite": "https://aistudiocdn.com/vite@^7.1.12"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="shell-game-wrapper">
+        <div id="ui-container">
+            <p id="message"></p>
+            <div id="start-container" class="button-container">
+                 <button id="start-button">شروع بازی</button>
+            </div>
+            <div id="restart-container" class="button-container" style="display: none;">
+                <button id="restart-button">بازی مجدد</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="menu-toggle" class="menu-toggle-button">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div id="main-menu" class="menu-panel">
+        <h2>منو</h2>
+        <div class="menu-nav">
+            <button class="nav-button" data-view="shell-game">بازی حدس لیوان</button>
+            <button class="nav-button" data-view="yes-no-game">بازی بله / خیر</button>
+            <button class="nav-button" data-view="pantomime">بازی پانتومیم</button>
+            <button class="nav-button" data-view="wheel-game">گردونه جوایز</button>
+        </div>
+        <hr/>
+        <h3>تنظیمات حدс لیوان</h3>
+        <div class="setting-item">
+            <label for="cup-count">تعداد لیوان:</label>
+            <input type="number" id="cup-count" value="3" min="2" max="6" class="setting-input">
+        </div>
+        <div class="setting-item">
+             <label>درجه سختی:</label>
+            <div id="difficulty-selector">
+                <button data-difficulty="medium" class="selected">متوسط</button>
+                <button data-difficulty="hard">سخت</button>
+                <button data-difficulty="veryHard">خیلی سخت</button>
+            </div>
+        </div>
+        <div class="setting-item">
+            <label>رنگ لیوان:</label>
+            <div id="color-selector" class="color-selector">
+                <button class="color-swatch" data-color="0xf44336" style="background-color: #f44336;" title="قرمز"></button>
+                <button class="color-swatch" data-color="0x4CAF50" style="background-color: #4CAF50;" title="سبز"></button>
+                <button class="color-swatch" data-color="0x2196F3" style="background-color: #2196F3;" title="آبی"></button>
+                <button class="color-swatch" data-color="0xFF9800" style="background-color: #FF9800;" title="نارنجی"></button>
+                <button class="color-swatch" data-color="0x9C27B0" style="background-color: #9C27B0;" title="بنفش"></button>
+            </div>
+        </div>
+        <button id="apply-settings-button">اعمال و شروع بازی جدید</button>
+        <hr/>
+        <h3>تنظیمات پس زمینه</h3>
+        <div class="setting-item">
+            <label>رنگ پس زمینه:</label>
+            <div id="shell-game-background-color-selector" class="color-selector">
+                <button class="color-swatch" data-color="#1a1a1a" style="background-color: #1a1a1a;" title="پیش فرض"></button>
+                <button class="color-swatch" data-color="#2c3e50" style="background-color: #2c3e50;" title="آبی نفتی"></button>
+                <button class="color-swatch" data-color="#4a148c" style="background-color: #4a148c;" title="بنفش تیره"></button>
+                <button class="color-swatch" data-color="#004d40" style="background-color: #004d40;" title="سبز تیره"></button>
+                <button class="color-swatch" data-color="#212121" style="background-color: #212121;" title="خاکستری"></button>
+                <button class="color-swatch" data-color="#f1c40f" style="background-color: #f1c40f;" title="زرد"></button>
+                <button class="color-swatch" data-color="#3498db" style="background-color: #3498db;" title="آبی"></button>
+                <button class="color-swatch" data-color="#e74c3c" style="background-color: #e74c3c;" title="قرمز"></button>
+                <button class="color-swatch" data-color="#ffffff" style="background-color: #ffffff;" title="سفید"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YES/NO & CREATE QUESTION SECTION WRAPPER -->
+    <div id="yes-no-section-wrapper" class="game-wrapper" style="display: none;">
+        
+        <div id="yn-menu-toggle" class="menu-toggle-button">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div id="yn-pause-toggle" class="pause-toggle-button" style="display: none;">
+            <span class="pause-icon bar1"></span>
+            <span class="pause-icon bar2"></span>
+        </div>
+
+        <div id="yn-main-menu" class="menu-panel">
+            <h2>منوی بازی</h2>
+             <div class="menu-nav">
+                <button class="nav-button" data-yn-view="shell-game">بازی حدس لیوان</button>
+                <button class="nav-button" data-yn-view="play">بازی بله / خیر</button>
+                <button class="nav-button" data-yn-view="create">ساخت سوال</button>
+                <button class="nav-button" data-yn-view="pantomime">بازی پانتومیم</button>
+                <button class="nav-button" data-yn-view="wheel-game">گردونه جوایز</button>
+            </div>
+            <hr/>
+            <h3>تنظیمات بازی</h3>
+            <div class="setting-item">
+                <label for="yn-timer-duration">زمان تایمر (ثانیه):</label>
+                <input type="number" id="yn-timer-duration" value="30" min="5" max="60" class="setting-input">
+            </div>
+            <div class="setting-item">
+                <label for="yn-questions-per-round">تعداد سوال در هر دور:</label>
+                <input type="number" id="yn-questions-per-round" value="15" min="5" max="50" class="setting-input">
+            </div>
+             <div class="setting-item">
+                <label>رنگ تم:</label>
+                <div id="yn-color-selector" class="color-selector">
+                    <button class="color-swatch" data-color="#f9a825" data-dark-color="#f57f17" style="background-color: #f9a825;" title="نارنجی"></button>
+                    <button class="color-swatch" data-color="#03A9F4" data-dark-color="#0288D1" style="background-color: #03A9F4;" title="آبی"></button>
+                    <button class="color-swatch" data-color="#9C27B0" data-dark-color="#7B1FA2" style="background-color: #9C27B0;" title="بنفش"></button>
+                    <button class="color-swatch" data-color="#9e9e9e" data-dark-color="#616161" style="background-color: #9e9e9e;" title="طوسی"></button>
+                    <button class="color-swatch" data-color="#e91e63" data-dark-color="#c2185b" style="background-color: #e91e63;" title="صورتی"></button>
+                </div>
+            </div>
+             <hr/>
+            <h3>تنظیمات پس زمینه</h3>
+             <div class="setting-item">
+                <label>رنگ پس زمینه:</label>
+                <div id="yn-background-color-selector" class="color-selector">
+                    <button class="color-swatch" data-color="#1a1a1a" style="background-color: #1a1a1a;" title="پیش فرض"></button>
+                    <button class="color-swatch" data-color="#2c3e50" style="background-color: #2c3e50;" title="آبی نفتی"></button>
+                    <button class="color-swatch" data-color="#4a148c" style="background-color: #4a148c;" title="بنفش تیره"></button>
+                    <button class="color-swatch" data-color="#004d40" style="background-color: #004d40;" title="سبز تیره"></button>
+                    <button class="color-swatch" data-color="#212121" style="background-color: #212121;" title="خاکستری"></button>
+                    <button class="color-swatch" data-color="#f1c40f" style="background-color: #f1c40f;" title="زرد"></button>
+                    <button class="color-swatch" data-color="#3498db" style="background-color: #3498db;" title="آبی"></button>
+                    <button class="color-swatch" data-color="#e74c3c" style="background-color: #e74c3c;" title="قرمز"></button>
+                    <button class="color-swatch" data-color="#ffffff" style="background-color: #ffffff;" title="سفید"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- YES/NO GAME CONTENT -->
+        <div id="yes-no-game-content" class="game-content">
+            <div id="yn-timer-container" style="display: none;">
+                <div id="yn-timer">30</div>
+            </div>
+            <div id="yn-image-container" style="display: none;">
+                <img id="yn-question-image" alt="تصویر سوال">
+            </div>
+            <p id="yn-question">برای شروع بازی از منو یک سوال بسازید.</p>
+            <p id="yn-feedback"></p>
+            <div id="yn-answers" style="display: none;">
+                <button id="yn-yes-btn">بله</button>
+                <button id="yn-no-btn">خیر</button>
+            </div>
+            <button id="yn-next-question-btn" style="display: none;">سوال بعد</button>
+            <button id="yn-start-btn">شروع بازی</button>
+            <div id="yn-round-summary" style="display: none;">
+                <p id="yn-round-score-text"></p>
+                <button id="yn-next-round-btn">دور بعد</button>
+            </div>
+        </div>
+
+        <!-- CREATE QUESTION CONTENT -->
+        <div id="create-question-content" class="game-content" style="display: none;">
+            <h1>ساخت سوال جدید</h1>
+            <form id="create-question-form">
+                <div class="form-group">
+                    <label for="question-text">متن سوال:</label>
+                    <textarea id="question-text" rows="3" required></textarea>
+                </div>
+                 <div class="form-group">
+                    <label for="question-image">تصویر (اختیاری):</label>
+                    <input type="file" id="question-image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>پاسخ صحیح:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="correct-answer" value="yes" checked> بله</label>
+                        <label><input type="radio" name="correct-answer" value="no"> خیر</label>
+                    </div>
+                </div>
+                <button type="submit">ذخیره سوال</button>
+            </form>
+            <div id="question-list-container">
+                <h2>سوالات ذخیره شده</h2>
+                <ul id="question-list"></ul>
+            </div>
+        </div>
+
+        <!-- PANTOMIME GAME CONTENT -->
+        <div id="pantomime-game-content" style="display: none;">
+            <div id="pantomime-main-menu" class="menu-panel">
+                <h2>منو</h2>
+                <div class="menu-nav">
+                    <button class="nav-button" data-view="shell-game">بازی حدس لیوان</button>
+                    <button class="nav-button" data-view="yes-no-game">بازی بله / خیر</button>
+                    <button class="nav-button" data-view="wheel-game">گردونه جوایز</button>
+                </div>
+                <hr/>
+                <h3>تنظیمات بازی</h3>
+                 <div class="setting-item">
+                    <label for="pantomime-timer-duration">زمان تایمر (ثانیه):</label>
+                    <input type="number" id="pantomime-timer-duration" value="60" min="30" max="180" class="setting-input">
+                </div>
+                 <hr/>
+                <h3>تنظیمات پس زمینه</h3>
+                 <div class="setting-item">
+                    <label>رنگ پس زمینه:</label>
+                    <div id="pantomime-background-color-selector" class="color-selector">
+                        <button class="color-swatch" data-color="#1a1a1a" style="background-color: #1a1a1a;" title="پیش فرض"></button>
+                        <button class="color-swatch" data-color="#2c3e50" style="background-color: #2c3e50;" title="آبی نفتی"></button>
+                        <button class="color-swatch" data-color="#4a148c" style="background-color: #4a148c;" title="بنفش تیره"></button>
+                        <button class="color-swatch" data-color="#004d40" style="background-color: #004d40;" title="سبز تیره"></button>
+                        <button class="color-swatch" data-color="#212121" style="background-color: #212121;" title="خاکستری"></button>
+                        <button class="color-swatch" data-color="#f1c40f" style="background-color: #f1c40f;" title="زرد"></button>
+                        <button class="color-swatch" data-color="#3498db" style="background-color: #3498db;" title="آبی"></button>
+                        <button class="color-swatch" data-color="#e74c3c" style="background-color: #e74c3c;" title="قرمز"></button>
+                        <button class="color-swatch" data-color="#ffffff" style="background-color: #ffffff;" title="سفید"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pantomime-wrapper">
+                 <div class="pantomime-sidebar">
+                    <div id="pantomime-menu-toggle" class="menu-toggle-button">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div id="pantomime-pause-toggle" class="pause-toggle-button" style="display: none;">
+                        <span class="pause-icon bar1"></span>
+                        <span class="pause-icon bar2"></span>
+                    </div>
+                    <div id="drawing-tools">
+                        <button id="pantomime-start-btn" class="tool-button">شروع</button>
+                        <button id="pantomime-end-btn" class="tool-button" style="display: none;">پایان بازی</button>
+                        <hr class="tool-separator">
+                        <div id="color-palette">
+                            <button class="color-swatch selected" data-color="#000000" style="background-color: #000;"></button>
+                            <button class="color-swatch" data-color="#e74c3c" style="background-color: #e74c3c;"></button>
+                            <button class="color-swatch" data-color="#3498db" style="background-color: #3498db;"></button>
+                            <button class="color-swatch" data-color="#2ecc71" style="background-color: #2ecc71;"></button>
+                        </div>
+                        <div class="tool-row">
+                            <button id="eraser-btn" class="tool-button">پاک کن</button>
+                        </div>
+                         <div class="tool-row">
+                            <button id="clear-btn" class="tool-button">پاک کردن</button>
+                        </div>
+                        <div class="tool-row">
+                            <button id="undo-btn" class="tool-button" title="واگرد" disabled>↩️</button>
+                            <button id="redo-btn" class="tool-button" title="بازگرد" disabled>↪️</button>
+                        </div>
+                    </div>
+                 </div>
+                <div id="pantomime-main-area">
+                    <div class="whiteboard-frame">
+                        <div id="pantomime-timer-container">
+                            <span id="pantomime-timer">60</span>
+                        </div>
+                        <canvas id="drawing-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- WHEEL OF PRIZES WRAPPER -->
+    <div id="wheel-game-wrapper" class="game-wrapper" style="display: none;">
+         <div id="wheel-menu-toggle" class="menu-toggle-button">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div id="wheel-main-menu" class="menu-panel">
+            <h2>منوی گردونه</h2>
+            <div class="menu-nav">
+                <button class="nav-button" data-view="shell-game">بازی حدس لیوان</button>
+                <button class="nav-button" data-view="yes-no-game">بازی بله / خیر</button>
+                <button class="nav-button" data-view="pantomime">بازی پانتومیم</button>
+            </div>
+            <hr/>
+            <h3>تنظیمات گردونه</h3>
+             <div class="setting-item">
+                <label>گزینه‌های گردونه (نام و شانس):</label>
+                <div id="wheel-prizes-container">
+                    <!-- JS will populate this -->
+                </div>
+                <button id="wheel-add-prize-btn" class="tool-button" style="width: 100%; margin-top: 10px;">افزودن گزینه</button>
+            </div>
+            <button id="wheel-apply-settings-btn">اعمال تنظیمات</button>
+            <hr/>
+            <h3>تنظیمات پس زمینه</h3>
+            <div class="setting-item">
+                <label>رنگ پس زمینه:</label>
+                <div id="wheel-background-color-selector" class="color-selector">
+                    <button class="color-swatch selected" data-color="#1a1a1a" style="background-color: #1a1a1a;" title="پیش فرض"></button>
+                    <button class="color-swatch" data-color="#2c3e50" style="background-color: #2c3e50;" title="آبی نفتی"></button>
+                    <button class="color-swatch" data-color="#4a148c" style="background-color: #4a148c;" title="بنفش تیره"></button>
+                    <button class="color-swatch" data-color="#004d40" style="background-color: #004d40;" title="سبز تیره"></button>
+                    <button class="color-swatch" data-color="#212121" style="background-color: #212121;" title="خاکستری"></button>
+                    <button class="color-swatch" data-color="#f1c40f" style="background-color: #f1c40f;" title="زرد"></button>
+                    <button class="color-swatch" data-color="#3498db" style="background-color: #3498db;" title="آبی"></button>
+                    <button class="color-swatch" data-color="#e74c3c" style="background-color: #e74c3c;" title="قرمز"></button>
+                    <button class="color-swatch" data-color="#ffffff" style="background-color: #ffffff;" title="سفید"></button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="wheel-game-content" class="game-content">
+            <h1>گردونه جوایز</h1>
+            <div id="wheel-container">
+                <div id="wheel-pointer"></div>
+                <canvas id="wheel-canvas"></canvas>
+            </div>
+            <button id="wheel-spin-btn">چرخش</button>
+        </div>
+        
+        <div id="wheel-result">
+            <div id="wheel-result-text"></div>
+            <button id="wheel-result-close-btn">بستن</button>
+        </div>
+    </div>
+
+    <audio id="wheel-spin-sound" preload="auto" hidden>
+        <source src="https://actions.google.com/sounds/v1/games/spin_wheel_fast.mp3" type="audio/mpeg">
+    </audio>
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
